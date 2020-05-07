@@ -6,7 +6,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="utf8")
 
 setuptools.setup(
     name="django-sass-compiler",
-    version="1.0.0",
+    version="1.0.1",
     author="Jacek B. Budzynski",
     author_email="jacek.b.budzynski@gmail.com",
     url="https://github.com/jaberbu/django-sass-compiler",
