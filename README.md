@@ -22,12 +22,12 @@ Quickstart
 pip install django-sass-compiler
 ```
 
-2.- Add `sass-compiler` to your `INSTALLED_APPS`
+2.- Add `django_sass_compiler` to your `INSTALLED_APPS`
 
 ```python
 INSTALLED_APPS = [
     ...,
-    'sass-compiler',
+    'django_sass_compiler',
 ]
 ```
 
@@ -56,7 +56,31 @@ All arguments are optional and combinable
   
  * `-nb, --no-build` 
   
-    Don't create `build` folder. `'app/static/app/css/main.css'` instead of `'app/static/app/build/css/main.css'`
+    Don't create `build` folder.
+    
+    ```
+    app/
+      |- static/
+         |- app/
+            |- scss/
+               |- style.scss
+            |- css/
+               |- style.css
+     ```
+    
+    instead
+    
+    ```
+    app/
+      |- static/
+         |- app/
+            |- scss/
+               |- style.scss
+            |- build/
+               |- css/
+                  |- style.css
+    ```
+    
 
 * `-m, --map` 
 
