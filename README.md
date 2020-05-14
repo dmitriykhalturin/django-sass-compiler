@@ -49,10 +49,19 @@ All arguments are optional and combinable
 
   Coding style of the compiled result. choose one of: `'nested'`, `'expanded'` (default), `'compact'`, `'compressed'`
  
+  You can also define this argument in `settings.SASS_COMPILER_STYLE` environment variable.
+  ```
+  SASS_COMPILER_STYLE = 'compressed'
+  ```
 
 * `-p, --precision` 
 
   Sets the number of digits of precision. 8 by default.
+  
+  You can also define this argument in `settings.SASS_COMPILER_PRECISION` environment variable.
+  ```
+  SASS_COMPILER_PRECISION = 5
+  ```
   
  * `-nb, --no-build` 
   
@@ -81,20 +90,39 @@ All arguments are optional and combinable
                   |- style.css
     ```
     
+    You can also define this argument in `settings.SASS_COMPILER_NO_BUILD` environment variable.
+    ```
+    SASS_COMPILER_NO_BUILD = True 
+    ```
 
 * `-m, --map` 
 
    Build a source map.
+   
+   You can also define this argument in `settings.SASS_COMPILER_MAP` environment variable.
+   ```
+   SASS_COMPILER_MAP = True 
+   ```
    
 * `-c, --clean`
 
   Remove old files before new compilation. 
   
   NOTE: This action will only take effect on current destination folder (`--no-build`).
+  
+  You can also define this argument in `settings.SASS_COMPILER_CLEAN` environment variable.
+  ```
+  SASS_COMPILER_CLEAN = True 
+  ```
 
 * `-w, --watch` 
 
-   Watch and compile files when `.scss` files are changed.
+  Watch and compile files when `.scss` files are changed.
+   
+  You can also define this argument in `settings.SASS_COMPILER_WATCH` environment variable.
+  ```
+  SASS_COMPILER_WATCH = True 
+  ```
    
 * `-i, --ignore` 
 
@@ -104,7 +132,7 @@ All arguments are optional and combinable
    You can also define list paths to ignore in `settings.SASS_COMPILER_IGNORE_PATTERNS` environment variable.
    
    ```
-   SASS_COMPILER_IGNORE_PATTERNS = [
+   SASS_COMPILER_IGNORE = [
       'app/scss/style.scss',
       'app/scss/test/*'
    ]

@@ -23,9 +23,9 @@ class Command(BaseCommand):
             dest='style',
             type=str,
             choices=['expanded', 'nested', 'compact', 'compressed'],
-            default='expanded',
             help=('An optional coding style of the compiled result. '
-                  'Choose one of: `\'nested\'`, `\'expanded\'` (default), `\'compact\'`, `\'compressed\'`'),
+                  'Choose one of: `\'nested\'`, `\'expanded\'` (default), `\'compact\'`, `\'compressed\'` '
+                  'You can also define this argument in SASS_COMPILER_STYLE environment variable.'),
         )
 
         parser.add_argument(
@@ -33,8 +33,8 @@ class Command(BaseCommand):
             '--precision',
             dest='precision',
             type=int,
-            default=8,
-            help='Optional precision for numbers. 8 by default.',
+            help='Optional precision for numbers. 8 by default. '
+                 'You can also define this argument in SASS_COMPILER_PRECISION environment variable.',
         )
 
         parser.add_argument(
@@ -42,9 +42,9 @@ class Command(BaseCommand):
             '--no-build',
             dest='build',
             action='store_true',
-            default=False,
             help=('Don\'t create build folder, e.g. "app/static/app/css/style.css" '
-                  'instead "app/static/app/build/css/style.css".'),
+                  'instead "app/static/app/build/css/style.css". '
+                  'You can also define this argument in SASS_COMPILER_NO_BUILD environment variable.'),
         )
 
         parser.add_argument(
@@ -52,8 +52,8 @@ class Command(BaseCommand):
             '--map',
             dest='map',
             action='store_true',
-            default=False,
-            help='Build a source map "style.css.map".',
+            help=('Build a source map "style.css.map". '
+                  'You can also define this argument in SASS_COMPILER_IGNORE environment variable.'),
         )
 
         parser.add_argument(
@@ -61,9 +61,9 @@ class Command(BaseCommand):
             '--clean',
             dest='clean',
             action='store_true',
-            default=False,
             help=('Remove "style.css", "style.css.map", "style.min.css", "style.min.css.map" files before '
-                  'compilation. This action will only take effect on current destination folder.'),
+                  'compilation. This action will only take effect on current destination folder. '
+                  'You can also define this argument in SASS_COMPILER_CLEAN environment variable.'),
         )
 
         parser.add_argument(
@@ -75,10 +75,10 @@ class Command(BaseCommand):
             metavar='PATTERN',
             help=('Ignore files or directories matching this glob-style pattern. '
                   'Use multiple times to ignore more. '
-                  'You can also define list paths to ignore in SASS_COMPILER_IGNORE_PATTERNS environment variable. '
                   'NOTE: The patterns will applied in the path since the `static` folder to the file name. '
                   'E.g. to ignore "apps/app/static/app/scss/style.scss" the longest path would be '
-                  '"--ignore=app/scss/style.scss" or "-i=**/**/style.scss" or some other glob-style pattern.'),
+                  '"--ignore=app/scss/style.scss" or "-i=**/**/style.scss" or some other glob-style pattern. '
+                  'You can also define this argument in SASS_COMPILER_IGNORE environment variable.'),
         )
 
         parser.add_argument(
@@ -86,8 +86,8 @@ class Command(BaseCommand):
             '--watch',
             dest='watch',
             action='store_true',
-            default=False,
-            help='Watch and compile files when scss files are changed.',
+            help=('Watch and compile files when scss files are changed. '
+                  'You can also define this argument in SASS_COMPILER_IGNORE environment variable.'),
         )
 
     def handle(self, *args, **options):
@@ -96,16 +96,25 @@ class Command(BaseCommand):
         :param args:
         :param options:
         """
-        style = options.get('style', 'expanded')                            # expanded | nested | compact | compressed
-        precision = options.get('precision', 8)                             # 8
-        build = not options.get('build', False)                             # True | False
-        map = options.get('map', False)                                     # True | False
-        clean = options.get('clean', False)                                 # True | False
+        style = self.get_argument(options, 'style', 'SASS_COMPILER_STYLE', 'expanded')
+        precision = self.get_argument(options, 'precision', 'SASS_COMPILER_PRECISION', 8)
+        build = not self.get_argument(options, 'build', 'SASS_COMPILER_NO_BUILD', False)
+        map = self.get_argument(options, 'map', 'SASS_COMPILER_MAP', False)
+        clean = self.get_argument(options, 'clean', 'SASS_COMPILER_CLEAN', False)
+        watch = self.get_argument(options, 'watch', 'SASS_COMPILER_WATCH', False)
+
         include_paths = self.get_static_paths()                             # List of paths to find @import
         ignore_patterns = self.get_ignore_patterns(options.get('ignore'))   # List of patterns to exclude paths
 
-        self.stdout.write('Ignore patterns: ' + str(ignore_patterns))
-        if options.get('watch', False):
+        self.stdout.write('--style: ' + str(style))
+        self.stdout.write('--precision: ' + str(precision))
+        self.stdout.write('--no-build: ' + str(not build))
+        self.stdout.write('--map: ' + str(map))
+        self.stdout.write('--clean: ' + str(clean))
+        self.stdout.write('--watching: ' + str(watch))
+        self.stdout.write('--ignore: ' + str(ignore_patterns))
+
+        if watch:
             self.stdout.write('Start watching...')
             try:
                 files = {}
@@ -181,6 +190,25 @@ class Command(BaseCommand):
         return files, update
 
     @staticmethod
+    def get_argument(options, argument_name, settings_argument, default):
+        """
+        Ger argument passed or declared in settings
+        :param options:
+        :param argument_name:       'style' | 'precision' | 'build' | 'map' | 'clean'
+        :param settings_argument:   'SASS_COMPILER_STYLE' | 'SASS_COMPILER_PRECISION' | ...
+        :param default:             'expanded' | 8 | False | ...
+        :return:                    'expanded'
+        """
+        if not options.get(argument_name) and hasattr(settings, settings_argument):
+            result = getattr(settings, settings_argument, default)
+        elif options.get(argument_name):
+            result = options.get(argument_name)
+        else:
+            result = default
+
+        return result
+
+    @staticmethod
     def get_output_files(filename, build, style):
         """
         Gets output css and source map file names
@@ -246,8 +274,8 @@ class Command(BaseCommand):
         :return:
         """
         patterns = ['_*.scss'] + list(set(ignore_args))
-        if hasattr(settings, 'SASS_COMPILER_IGNORE_PATTERNS'):
-            patterns += settings.SASS_COMPILER_IGNORE_PATTERNS
+        if hasattr(settings, 'SASS_COMPILER_IGNORE'):
+            patterns += settings.SASS_COMPILER_IGNORE
         return [x.replace('\\', os.sep).replace('/', os.sep) for x in patterns]
 
     @staticmethod
