@@ -6,11 +6,11 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="utf8")
 
 setuptools.setup(
     name="django-sass-compiler",
-    version="1.0.1",
+    version="1.1.0",
     author="Jacek B. Budzynski",
     author_email="jacek.b.budzynski@gmail.com",
     url="https://github.com/jaberbu/django-sass-compiler",
-    description="Using libsass, compile all .scss files found in the paths defined in settings.STATICFILES_FINDERS.",
+    description="Simplify the use of Sass in Django.",
     long_description=README,
     long_description_content_type="text/markdown",
     license="BSD license",
