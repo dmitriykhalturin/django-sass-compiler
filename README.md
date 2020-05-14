@@ -129,15 +129,6 @@ All arguments are optional and combinable
    Ignore files or directories matching this glob-style pattern. 
    Use multiple times to ignore more. 
    
-   You can also define list paths to ignore in `settings.SASS_COMPILER_IGNORE_PATTERNS` environment variable.
-   
-   ```
-   SASS_COMPILER_IGNORE = [
-      'app/scss/style.scss',
-      'app/scss/test/*'
-   ]
-   ```
-   
    NOTE: All patterns will applied in the path since the `static` folder to the file name. 
    
    Example: 
@@ -149,6 +140,14 @@ All arguments are optional and combinable
    `python manage.py sass-compiler -i=**/**/style.scss` 
    
    or some other glob-style pattern.
+   
+   You can also define list paths to ignore in `settings.SASS_COMPILER_IGNORE` environment variable.
+   ```
+   SASS_COMPILER_IGNORE = [
+      'app/scss/style.scss',
+      'app/scss/test/*'
+   ]
+   ```
 
 @import
 -------
