@@ -24,7 +24,7 @@ class Command(BaseCommand):
             type=str,
             choices=['expanded', 'nested', 'compact', 'compressed'],
             help=('An optional coding style of the compiled result. '
-                  'Choose one of: `\'nested\'`, `\'expanded\'` (default), `\'compact\'`, `\'compressed\'` '
+                  'Choose one of: `\'expanded\'` (default), `\'nested\'`, `\'compact\'`, `\'compressed\'` '
                   'You can also define this argument in SASS_COMPILER_STYLE environment variable.'),
         )
 
@@ -33,18 +33,18 @@ class Command(BaseCommand):
             '--precision',
             dest='precision',
             type=int,
-            help='Optional precision for numbers. 8 by default. '
-                 'You can also define this argument in SASS_COMPILER_PRECISION environment variable.',
+            help=('Optional precision for numbers. 8 by default. '
+                  'You can also define this argument in SASS_COMPILER_PRECISION environment variable.'),
         )
 
         parser.add_argument(
-            '-nb',
-            '--no-build',
-            dest='build',
-            action='store_true',
-            help=('Don\'t create build folder, e.g. "app/static/app/css/style.css" '
-                  'instead "app/static/app/build/css/style.css". '
-                  'You can also define this argument in SASS_COMPILER_NO_BUILD environment variable.'),
+            '-d',
+            '--destination',
+            dest='destination',
+            type=str,
+            help=('Create destination folder for compile result. '
+                  'Default value: `\'css\'`, e.g. "app/static/app/css/style.css". '
+                  'You can also define this argument in SASS_COMPILER_DESTINATION environment variable.'),
         )
 
         parser.add_argument(
@@ -98,17 +98,17 @@ class Command(BaseCommand):
         """
         style = self.get_argument(options, 'style', 'SASS_COMPILER_STYLE', 'expanded')
         precision = self.get_argument(options, 'precision', 'SASS_COMPILER_PRECISION', 8)
-        build = not self.get_argument(options, 'build', 'SASS_COMPILER_NO_BUILD', False)
+        destination = self.get_argument(options, 'destination', 'SASS_COMPILER_DESTINATION', 'css')
         map = self.get_argument(options, 'map', 'SASS_COMPILER_MAP', False)
         clean = self.get_argument(options, 'clean', 'SASS_COMPILER_CLEAN', False)
         watch = self.get_argument(options, 'watch', 'SASS_COMPILER_WATCH', False)
 
-        include_paths = self.get_static_paths()                             # List of paths to find @import
-        ignore_patterns = self.get_ignore_patterns(options.get('ignore'))   # List of patterns to exclude paths
+        include_paths = self.get_static_paths()  # List of paths to find @import
+        ignore_patterns = self.get_ignore_patterns(options.get('ignore'))  # List of patterns to exclude paths
 
         self.stdout.write('--style: ' + str(style))
         self.stdout.write('--precision: ' + str(precision))
-        self.stdout.write('--no-build: ' + str(not build))
+        self.stdout.write('--destination: ' + str(destination))
         self.stdout.write('--map: ' + str(map))
         self.stdout.write('--clean: ' + str(clean))
         self.stdout.write('--watching: ' + str(watch))
@@ -121,22 +121,22 @@ class Command(BaseCommand):
                 while True:
                     files, recompile = self.needs_recompile(files)
                     if recompile:
-                        self.compile_files(style, build, include_paths, ignore_patterns, precision, map, clean)
+                        self.compile_files(style, destination, include_paths, ignore_patterns, precision, map, clean)
                     time.sleep(1)
 
             except (InterruptedError, KeyboardInterrupt):
                 self.stdout.write('Stop watching.')
 
         else:
-            self.compile_files(style, build, include_paths, ignore_patterns, precision, map, clean)
+            self.compile_files(style, destination, include_paths, ignore_patterns, precision, map, clean)
 
         self.stdout.write('End.')
 
-    def compile_files(self, output_style, build, include_paths, ignore_patterns, precision, source_map, clean):
+    def compile_files(self, output_style, destination, include_paths, ignore_patterns, precision, source_map, clean):
         """
         Finds all scss files in all apps (except who starts with _ e.g.: _variable.scss) and runs sass compile
         :param output_style:        'expanded' | 'nested' | 'compact' | 'compressed'
-        :param build:               True | False
+        :param destination:         'css' | ...
         :param include_paths:       List of paths to find @import
         :param ignore_patterns:     List of patterns to ignore
         :param precision:           8
@@ -146,7 +146,7 @@ class Command(BaseCommand):
 
         for scss_filename in self.get_scss_files(ignore_patterns):
 
-            css_filename, source_map_filename = self.get_output_files(scss_filename, build, output_style)
+            css_filename, source_map_filename = self.get_output_files(scss_filename, destination)
 
             try:
                 output = sass.compile(
@@ -194,7 +194,7 @@ class Command(BaseCommand):
         """
         Ger argument passed or declared in settings
         :param options:
-        :param argument_name:       'style' | 'precision' | 'build' | 'map' | 'clean'
+        :param argument_name:       'style' | 'precision' | 'destination' | 'map' | 'clean'
         :param settings_argument:   'SASS_COMPILER_STYLE' | 'SASS_COMPILER_PRECISION' | ...
         :param default:             'expanded' | 8 | False | ...
         :return:                    'expanded'
@@ -209,24 +209,21 @@ class Command(BaseCommand):
         return result
 
     @staticmethod
-    def get_output_files(filename, build, style):
+    def get_output_files(filename, destination):
         """
         Gets output css and source map file names
-        Manage the output path according to the arguments --no-build and --style
+        Manage the output path according to the arguments --destination
         :param filename:    'Your/Path/project/apps/app1/static/app1/scss/style.scss'
-        :param build:       True | False
-        :param style:       'expanded' | 'nested' | 'compact' | 'compressed'
+        :param destination: 'css' | ...
         :return:
-        'Your/Path/project/apps/app1/static/app1/build/css/style.css',
-        'Your/Path/project/apps/app1/static/app1/build/css/style.css.map'
+        'Your/Path/project/apps/app1/static/app1/css/style.css',
+        'Your/Path/project/apps/app1/static/app1/css/style.css.map'
         """
         scss_folder = ''.join([os.sep, 'scss', os.sep])                                 # \scss\
-        build_folder = ''.join([os.sep, 'build']) if build else ''                      # \build | ''
-        css_folder = ''.join([build_folder, os.sep, 'css', os.sep])                     # \build\css\ | \css\
-        css_file = filename.replace(scss_folder, css_folder).replace('.scss', '.css')   # ...\build\css\style.css
-        source_map_filename = ''.join([css_file, '.map'])                               # ...\build\css\style.css.map
-        if style == 'compressed':
-            css_file = css_file.replace('.css', '.min.css')                             # ...\build\css\style.min.css
+        destination_folder = 'css' if not destination else destination                  # \css | `destination`
+        css_folder = ''.join([os.sep, os.path.normpath(destination_folder), os.sep])    # \css\ | \`destination`\
+        css_file = filename.replace(scss_folder, css_folder).replace('.scss', '.css')   # ...\css\style.css
+        source_map_filename = ''.join([css_file, '.map'])                               # ...\css\style.css.map
 
         return css_file, source_map_filename
 
@@ -282,7 +279,7 @@ class Command(BaseCommand):
     def store_file(filename, raw):
         """
         Store sass.compile output in file
-        :param filename:    'Your/Path/project/apps/users/static/users/build/css/style.css'
+        :param filename:    'Your/Path/project/apps/users/static/users/css/style.css'
         :param raw:         'body {background-color: #f4f7f9;}...'
         """
         file_path = os.path.dirname(filename)
@@ -296,12 +293,11 @@ class Command(BaseCommand):
     @staticmethod
     def clean_files(filename):
         """
-        Remove 'style.css', 'style.css.map', 'style.min.css', 'style.min.css.map' files from css folder
-        :param filename:    'Your/Path/project/apps/users/static/users/build/css/style.css'
+        Remove 'style.css', 'style.css.map' files from css folder
+        :param filename:    'Your/Path/project/apps/users/static/users/css/style.css'
         """
         file, ext = os.path.splitext(filename)
-        file = file[:-4] if file.endswith('.min') else file
-        for extension in ('css', 'css.map', 'min.css', 'min.css.map'):
+        for extension in ('css', 'css.map'):
             path = '.'.join([file, extension])
             if os.path.isfile(path):
                 os.remove(path)

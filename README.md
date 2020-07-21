@@ -63,9 +63,9 @@ All arguments are optional and combinable
   SASS_COMPILER_PRECISION = 5
   ```
   
- * `-nb, --no-build` 
+ * `-d, --destination` 
   
-    Don't create `build` folder.
+    Create destination folder for compile result.
     
     ```
     app/
@@ -73,7 +73,7 @@ All arguments are optional and combinable
          |- app/
             |- scss/
                |- style.scss
-            |- css/
+            |- example/
                |- style.css
      ```
     
@@ -85,14 +85,13 @@ All arguments are optional and combinable
          |- app/
             |- scss/
                |- style.scss
-            |- build/
-               |- css/
-                  |- style.css
+            |- css/
+               |- style.css
     ```
     
-    You can also define this argument in `settings.SASS_COMPILER_NO_BUILD` environment variable.
+    You can also define this argument in `settings.SASS_COMPILER_DESTINATION` environment variable.
     ```
-    SASS_COMPILER_NO_BUILD = True 
+    SASS_COMPILER_DESTINATION = 'example' 
     ```
 
 * `-m, --map` 
@@ -108,7 +107,7 @@ All arguments are optional and combinable
 
   Remove old files before new compilation. 
   
-  NOTE: This action will only take effect on current destination folder (`--no-build`).
+  NOTE: This action will only take effect with selection destination folder (`--destination`).
   
   You can also define this argument in `settings.SASS_COMPILER_CLEAN` environment variable.
   ```
@@ -194,15 +193,14 @@ app/
         |- scss/
            |- _colors.scss
            |- style.scss
-        |- build/
-           |- css/
-              |- style.css
+        |- css/
+           |- style.css
 ```
 
 ##### With some argument output:
 
 ```
-python manage.py sass-compiler --style=compressed --no-build --map
+python manage.py sass-compiler --style=compressed --destination=styles --map
 ```
 
 ```
@@ -212,8 +210,8 @@ app/
         |- scss/
            |- _colors.scss
            |- style.scss
-        |- css/
-           |- style.min.css
+        |- styles/
+           |- style.css
            |- style.css.map
 ```
 Licensing

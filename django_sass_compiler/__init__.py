@@ -37,8 +37,7 @@ def find_static_scss():
     return scss_files
 
 
-def compile_sass(inpath, outpath, output_style=None, precision=None,
-                 source_map=False):
+def compile_sass(inpath, outpath, output_style=None, precision=None, source_map=False):
     """
     Calls sass.compile() within context of Django's known static file paths,
     and writes output CSS and/or sourcemaps to file.
